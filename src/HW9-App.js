@@ -1,15 +1,11 @@
 import logo from './logo.svg';
 import './App.css';
 import { RenderSquare } from './Board.js';
-import { useState, useRef, useEffect } from 'react';
-import io from 'socket.io-client';
-
 
 function App() {
 
-  return (
-    <div>
-      <div class="board">
+ return (
+    <div class="board">
        <RenderSquare i="1" />
        <RenderSquare i="2" />
        <RenderSquare i="3" />
@@ -20,8 +16,8 @@ function App() {
        <RenderSquare i="8" />
        <RenderSquare i="9" />
     </div>
-    </div>
-  );
+    );
 }
+
 
 export default App;
