@@ -3,11 +3,12 @@ import { useState, useRef, useEffect} from 'react';
 import io from 'socket.io-client';
 
 const socket = io(); // Connects to socket connection
-var count=0;
+var turn = 'X';
 
 export function RenderSquare(props) {
   
   const [board, setBoard] = useState(Array(9).fill(null));
+  const [isNext, setIsNext] = useState(true);
   const nextBoard = useRef(null);
     
   function Square({value, onClick}) {
@@ -25,43 +26,50 @@ export function RenderSquare(props) {
       console.log('Player event received!');
       console.log(data);
       // If the server sends a message (on behalf of another client), then we
-      // add it to the list of messages to render it on the UI.\
-       if(data.count % 2 === 0){
-          data.nextBoard[data.index] = 'X';
+      // add it to the list of messages to render it on the UI.\\
+    
+      setBoard(prevBoard => {
+        const nextBoard = prevBoard.slice();
+        
+        if (data.turn === 'O'){
+          nextBoard[data.index] = 'X';
+          turn = 'O';
         }else{
-          data.nextBoard[data.index] = 'O';
-        } 
-      count++;
-      setBoard(data.nextBoard, nextBoard);
+          nextBoard[data.index] = 'O';
+          turn = 'X';
+        }
+        console.log(isNext);
+        return nextBoard;
+      });
+     
     });
   }, []);
   
   return ( <div>
   
     <Square 
-      value={board[props.i]}
+      value={board[props.i]} 
       onClick={() => {
-      if (nextBoard != null){
-         var index = props.i;
-         const nextBoard = board.slice();
-        if(count % 2 === 0){
+      
+        var index = props.i;
+        const nextBoard = board.slice();
+        if (turn === 'X'){
           nextBoard[index] = 'X';
+          turn = 'O';
         }else{
           nextBoard[index] = 'O';
+          turn = 'X';
+          
         }
+        
         setBoard(nextBoard);
-        socket.emit('tic', { message: setBoard, nextBoard, count, index });
-       
-      }
+        console.log(board);
+        socket.emit('tic', { message: isNext, turn, board, index });
        
       }}/>
-      
-      
-  
+
   </div>
-  
-  
-    
+
     );
   
 }
