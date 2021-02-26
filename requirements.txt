@@ -1,6 +1,6 @@
 Flask
 requests
-SocketIO
-CORS
+Flask-SocketIO
+Flask-Cors
 react
-npm install
+
