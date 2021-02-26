@@ -97,7 +97,6 @@ export function Board(props) {
           nextBoard[data.index] = 'X';
           
         }
-        
        
         return nextBoard;
       });

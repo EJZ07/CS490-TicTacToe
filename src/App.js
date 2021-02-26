@@ -3,7 +3,7 @@ import './App.css';
 import { Board } from './Board.js';
 import { useState, useRef, useEffect } from 'react';
 import io from 'socket.io-client';
-import { Link } from 'react-router-dom';
+
 
 const socket = io();
 
