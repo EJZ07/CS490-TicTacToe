@@ -1,7 +1,9 @@
 import os
-from flask import Flask, send_from_directory, json, session
+from flask import Flask, send_from_directory, json, session, render_template
 from flask_socketio import SocketIO
 from flask_cors import CORS
+
+name_arr = []
 
 app = Flask(__name__, static_folder='./build/static')
 
@@ -13,6 +15,9 @@ socketio = SocketIO(
     json=json,
     manage_session=False
 )
+@app.route('/register')
+def new_user():
+    return render_template("login.html")
 
 @app.route('/', defaults={"filename": "index.html"})
 @app.route('/<path:filename>')
@@ -28,6 +33,24 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print('User disconnected!')
+    
+#When a Client enters a username and emits the event 'name', this function is run
+@socketio.on('name')
+def on_name(data):
+    print(str(data))
+    name_arr.append(data['message'])
+    playerSize = len(name_arr)
+    
+    if (playerSize == 1):
+        playerType = 1
+    elif (playerSize == 2):
+        playerType = 2
+    elif (playerSize > 2 ):
+        playerType = 3   
+    
+    print('User ' + str(data['message']) + ' has connected')
+    socketio.emit(name_arr[-1], [playerType, data], broadcast=True, include_self=False)
+    socketio.emit('name', name_arr, broadcast=True, include_self=False)
 
 # When a client emits the event 'chat' to the server, this function is run
 # 'chat' is a custom event name that we just decided

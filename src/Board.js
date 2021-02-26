@@ -4,12 +4,14 @@ import io from 'socket.io-client';
 
 const socket = io(); // Connects to socket connection
 var turn = 'X';
-
-export function RenderSquare(props) {
+var player = " "
+var player_id;
+export function Board(props) {
   
   const [board, setBoard] = useState(Array(9).fill(null));
+  const [playerBase, setPlayerBase] = useState([]);
   const [isNext, setIsNext] = useState(true);
-  const nextBoard = useRef(null);
+  
     
   function Square({value, onClick}) {
   //
@@ -19,7 +21,64 @@ export function RenderSquare(props) {
   
   }
   
+  function RenderSquare(props) {
+    return ( <div>
+  
+    <Square 
+      value={board[props.i]} 
+      onClick={() => {
+      
+        var index = props.i;
+        const nextBoard = board.slice();
+        console.log("WHO???: " + isNext + " Player: " + player);
+      
+        if (player_id === 1 ){
+          nextBoard[index] = 'X';
+        
+          setBoard(nextBoard);
+          
+        }else if(player_id === 2 ){
+          nextBoard[index] = 'O';
+           
+          setBoard(nextBoard);
+          
+        }
+        
+        
+        socket.emit('tic', { message: board, turn, index });
+      }}/>
+
+  </div>
+
+    );
+  }
+  
   useEffect(() => {
+    
+    socket.on('name', (name_arr) => {
+      console.log('YA boy is here');
+      console.log(name_arr);
+      
+      setPlayerBase(name_arr);
+      console.log("PlayerBase = " + playerBase);
+    });
+    
+    socket.on(props.message, ([playerType, data]) => {
+      console.log('Player ' + playerType + 'is here');
+      console.log(data, playerType);
+      
+      if (playerType == 1){
+        player_id = 1;
+        player = "Player 1";
+      }else if (playerType == 2){
+        player_id = 2;
+        player = "Player 2";
+      }else {
+        player_id = 3;
+        player = "Spectator";
+      }
+      
+    });
     // Listening for a chat event emitted by the server. If received, we
     // run the code in the function that is passed in as the second arg
     socket.on('tic', (data) => {
@@ -31,48 +90,45 @@ export function RenderSquare(props) {
       setBoard(prevBoard => {
         const nextBoard = prevBoard.slice();
         
-        if (data.turn === 'O'){
-          nextBoard[data.index] = 'X';
-          turn = 'O';
-        }else{
+        if (player_id === 1){
           nextBoard[data.index] = 'O';
-          turn = 'X';
+          
+        }else if(player_id === 2 ){
+          nextBoard[data.index] = 'X';
+          
         }
-        console.log(isNext);
+        
+       
         return nextBoard;
       });
-     
+       
     });
   }, []);
   
   return ( <div>
-  
-    <Square 
-      value={board[props.i]} 
-      onClick={() => {
-      
-        var index = props.i;
-        const nextBoard = board.slice();
-        if (turn === 'X'){
-          nextBoard[index] = 'X';
-          turn = 'O';
-        }else{
-          nextBoard[index] = 'O';
-          turn = 'X';
-          
-        }
-        
-        setBoard(nextBoard);
-        console.log(board);
-        socket.emit('tic', { message: isNext, turn, board, index });
-       
-      }}/>
-
-  </div>
-
-    );
+  <h1>Hello {player} {props.message}!</h1>
+  <p1>Lobby: </p1>
+  <ul>
+    { playerBase.map((item, index) => <div>{playerBase[index]}</div> )}
+  </ul>
+      <div class="board">
+       <RenderSquare i="1" />
+       <RenderSquare i="2" />
+       <RenderSquare i="3" />
+       <RenderSquare i="4" />
+       <RenderSquare i="5" />
+       <RenderSquare i="6" />
+       <RenderSquare i="7" />
+       <RenderSquare i="8" />
+       <RenderSquare i="9" />
+      </div>
+     </div>    
+     );
   
 }
+
+export default Board;
+      
 
 
 
