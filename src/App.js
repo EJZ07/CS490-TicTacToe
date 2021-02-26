@@ -10,7 +10,6 @@ const socket = io();
 function App() {
     const [isLogin, setIsLogin] = useState(false);
     const inputRef = useRef(null);
-    
     function TicTacToe(){
        
         if(isLogin){
@@ -28,7 +27,7 @@ function App() {
             <button onClick={ () => {
                     const message = inputRef.current.value; 
                     socket.emit("name", {message});
-                                  
+                               
                     setIsLogin(prevLogin => {
                         setIsLogin(!isLogin);
                     });

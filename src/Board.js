@@ -27,25 +27,23 @@ export function Board(props) {
     <Square 
       value={board[props.i]} 
       onClick={() => {
-      
-        var index = props.i;
-        const nextBoard = board.slice();
-        console.log("WHO???: " + isNext + " Player: " + player);
-      
-        if (player_id === 1 ){
-          nextBoard[index] = 'X';
+        if (player_id < 3){
+          var index = props.i;
+          const nextBoard = board.slice();
+          console.log("WHO???: " + isNext + " Player: " + player);
         
-          setBoard(nextBoard);
+          if (turn === 'X'){
+             nextBoard[index] = 'X';
+              turn = 'O';
           
-        }else if(player_id === 2 ){
-          nextBoard[index] = 'O';
-           
+          }else if(turn === 'O'){
+             nextBoard[index] = 'O';
+              turn = 'X';
+          }
           setBoard(nextBoard);
-          
+          socket.emit('tic', { message: board, turn, index });
         }
         
-        
-        socket.emit('tic', { message: board, turn, index });
       }}/>
 
   </div>
@@ -64,6 +62,7 @@ export function Board(props) {
     });
     
     socket.on(props.message, ([playerType, data]) => {
+      console.log(props.message);
       console.log('Player ' + playerType + 'is here');
       console.log(data, playerType);
       
@@ -90,14 +89,14 @@ export function Board(props) {
       setBoard(prevBoard => {
         const nextBoard = prevBoard.slice();
         
-        if (player_id === 1){
-          nextBoard[data.index] = 'O';
-          
-        }else if(player_id === 2 ){
-          nextBoard[data.index] = 'X';
-          
-        }
-       
+          if (data.turn === 'O'){
+            nextBoard[data.index] = 'X';
+            turn = 'O';
+          }else{
+            nextBoard[data.index] = 'O';
+            turn = 'X';
+          }
+
         return nextBoard;
       });
        
