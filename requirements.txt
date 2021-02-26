@@ -3,3 +3,4 @@ requests
 SocketIO
 CORS
 react
+npm install
