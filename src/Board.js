@@ -6,7 +6,7 @@ const socket = io(); // Connects to socket connection
 var turn = 'X';
 var player = " "
 var player_id;
-var disconnected = false;
+
 export function Board(props) {
   
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -23,13 +23,24 @@ export function Board(props) {
   
   }
   
+  function Restart(){
+    return <div>
+      <button onClick={() => {
+          setBoard(Array(9).fill(null));
+          turn = 'X';
+          socket.emit('reset', { message: board, turn });
+        }}>restart</button>
+      </div>;
+  }
+  
+    
   function RenderSquare(props) {
     return ( <div>
   
     <Square 
       value={board[props.i]} 
       onClick={() => {
-        if (player_id < 3){
+        if (player_id < 3 && board[props.i] === null){
           var index = props.i;
           const nextBoard = board.slice();
           console.log("WHO???: " + index + " Player: " + player);
@@ -72,17 +83,14 @@ export function Board(props) {
       }
     }
     
-    
   }
-  
-  useEffect(() => {
-    
-    socket.on('connect', (data) => {
+  /*
+  socket.on('connect', (data) => {
       console.log('Player disconnected');
-      
-      disconnected = true;
-      
+      setPlayerBase([]);
     });
+    */
+  useEffect(() => {
     
     socket.on('name', (name_arr) => {
       console.log('YA boy is here');
@@ -132,6 +140,11 @@ export function Board(props) {
       });
        
     });
+    
+    socket.on('reset', (data) => {
+      setBoard(Array(9).fill(null));
+      turn = 'X';
+    })
   }, []);
   
   return ( <div>
@@ -152,16 +165,12 @@ export function Board(props) {
        <RenderSquare i="7" />
        <RenderSquare i="8" />
       </div>
-      
+      <div class="Restart"><Restart /></div>
      </div>    
      );
   
 }
 
 export default Board;
-      
-
-
-
 
 
