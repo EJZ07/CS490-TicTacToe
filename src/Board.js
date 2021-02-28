@@ -1,15 +1,17 @@
-import logo from './logo.svg';
-import { useState, useRef, useEffect} from 'react';
+import { useState, useEffect} from 'react';
 import io from 'socket.io-client';
+import { CalculateWinner, isBoardFull } from './Winner.js'
 
 const socket = io(); // Connects to socket connection
 var turn = 'X';
 var player = " "
 var player_id;
+var disconnected = false;
 export function Board(props) {
   
   const [board, setBoard] = useState(Array(9).fill(null));
   const [playerBase, setPlayerBase] = useState([]);
+  const winner = CalculateWinner(board);
   const [isNext, setIsNext] = useState(true);
   
     
@@ -30,7 +32,7 @@ export function Board(props) {
         if (player_id < 3){
           var index = props.i;
           const nextBoard = board.slice();
-          console.log("WHO???: " + isNext + " Player: " + player);
+          console.log("WHO???: " + index + " Player: " + player);
         
           if (turn === 'X'){
              nextBoard[index] = 'X';
@@ -41,7 +43,7 @@ export function Board(props) {
               turn = 'X';
           }
           setBoard(nextBoard);
-          socket.emit('tic', { message: board, turn, index });
+          socket.emit('tic', { message: nextBoard, turn, index });
         }
         
       }}/>
@@ -51,7 +53,36 @@ export function Board(props) {
     );
   }
   
+  function getStatus() {
+    
+    if (winner) {
+      if(winner === 'X'){
+        return "Winner: " + playerBase[0];
+      }else{
+        return "Winner: " + playerBase[1];
+      }
+      
+    } else if (isBoardFull(board)) {
+      return "Draw!";
+    } else{
+      if (turn === 'X'){
+        return "Player 1's turn";
+      }else{
+        return "Player 2's turn";
+      }
+    }
+    
+    
+  }
+  
   useEffect(() => {
+    
+    socket.on('connect', (data) => {
+      console.log('Player disconnected');
+      
+      disconnected = true;
+      
+    });
     
     socket.on('name', (name_arr) => {
       console.log('YA boy is here');
@@ -105,11 +136,13 @@ export function Board(props) {
   
   return ( <div>
   <h1>Hello {player} {props.message}!</h1>
+  <h2 className="game-info">{getStatus()}</h2>
   <p1>Lobby: </p1>
   <ul>
     { playerBase.map((item, index) => <div>{playerBase[index]}</div> )}
   </ul>
       <div class="board">
+       <RenderSquare i="0" />
        <RenderSquare i="1" />
        <RenderSquare i="2" />
        <RenderSquare i="3" />
@@ -118,8 +151,8 @@ export function Board(props) {
        <RenderSquare i="6" />
        <RenderSquare i="7" />
        <RenderSquare i="8" />
-       <RenderSquare i="9" />
       </div>
+      
      </div>    
      );
   
