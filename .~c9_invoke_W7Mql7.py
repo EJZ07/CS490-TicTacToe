@@ -61,9 +61,7 @@ def on_chat(data): # data is whatever arg you pass in your emit call on client
     # the client that emmitted the event that triggered this function
     socketio.emit('tic',  data, broadcast=True, include_self=False)
 
-@socketio.on('reset')
-def on_reset(data):
-    socketio.emit('reset', data, broadcast=True, include_self=False)
+@
 # Note that we don't call app.run anymore. We call socketio.run with app arg
 socketio.run(
     app,
