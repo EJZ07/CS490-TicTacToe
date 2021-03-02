@@ -63,6 +63,7 @@ def on_chat(data): # data is whatever arg you pass in your emit call on client
 
 @socketio.on('reset')
 def on_reset(data):
+    name_arr = []
     socketio.emit('reset', data, broadcast=True, include_self=False)
 # Note that we don't call app.run anymore. We call socketio.run with app arg
 socketio.run(

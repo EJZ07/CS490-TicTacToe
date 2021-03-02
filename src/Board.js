@@ -1,10 +1,10 @@
 import { useState, useEffect} from 'react';
 import io from 'socket.io-client';
-import { CalculateWinner, isBoardFull } from './Winner.js'
+import { CalculateWinner, isBoardFull } from './Winner.js';
 
 const socket = io(); // Connects to socket connection
 var turn = 'X';
-var player = " "
+var player = " ";
 var player_id;
 
 export function Board(props) {
@@ -144,7 +144,7 @@ export function Board(props) {
     socket.on('reset', (data) => {
       setBoard(Array(9).fill(null));
       turn = 'X';
-    })
+    });
   }, []);
   
   return ( <div>
