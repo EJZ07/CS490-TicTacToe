@@ -12,7 +12,7 @@ export function Board(props) {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [playerBase, setPlayerBase] = useState([]);
   const winner = CalculateWinner(board);
-  const [isNext, setIsNext] = useState(true);
+  const [theScore, setTheScore] = useState([100]);
   
     
   function Square({value, onClick}) {
@@ -68,9 +68,12 @@ export function Board(props) {
     
     if (winner) {
       if(winner === 'X'){
+        socket.emit('score', { message: playerBase[1], winner});
         return "Winner: " + playerBase[0];
       }else{
+        socket.emit('score', { message: playerBase[0], winner});
         return "Winner: " + playerBase[1];
+        
       }
       
     } else if (isBoardFull(board)) {
@@ -84,21 +87,17 @@ export function Board(props) {
     }
     
   }
-  /*
-  socket.on('connect', (data) => {
-      console.log('Player disconnected');
-      setPlayerBase([]);
-    });
-    */
-  useEffect(() => {
-    
-    socket.on('name', (name_arr) => {
-      console.log('YA boy is here');
-      console.log(name_arr);
+  
+  socket.on('name', (data) => {
+      //console.log('message recieved');
+      setTheScore(prevScore => [...prevScore, data[1]]);
+      setPlayerBase(data[0]);
       
-      setPlayerBase(name_arr);
-      console.log("PlayerBase = " + playerBase);
+      console.log("Data " + data[1]);
+      console.log("PlayerBase = " + playerBase + " Score: " + theScore);
     });
+    
+  useEffect(() => {
     
     socket.on(props.message, ([playerType, data]) => {
       console.log(props.message);
@@ -116,6 +115,19 @@ export function Board(props) {
         player = "Spectator";
       }
       
+    });
+    
+    socket.on('score', (data) => {
+      console.log('Score updated');
+      setTheScore(prevScore => {
+        if(winner === 'X'){
+           prevScore[1] = data;
+        }else{
+           prevScore[0] = data;
+        }
+       
+       return prevScore;
+      });
     });
     // Listening for a chat event emitted by the server. If received, we
     // run the code in the function that is passed in as the second arg
@@ -149,12 +161,14 @@ export function Board(props) {
   
   return ( <div>
   <h1>Hello {player} {props.message}!</h1>
+  <div className="leader">Leaderboard
+    <ul>
+      <div>{playerBase[0]} / Score: {theScore[0]}</div>
+      <div>{playerBase[1]} / Score: {theScore[1]}</div>
+    </ul>
+  </div>
   <h2 className="game-info">{getStatus()}</h2>
-  <p1>Lobby: </p1>
-  <ul>
-    { playerBase.map((item, index) => <div>{playerBase[index]}</div> )}
-  </ul>
-      <div class="board">
+      <div className="board">
        <RenderSquare i="0" />
        <RenderSquare i="1" />
        <RenderSquare i="2" />
@@ -166,6 +180,11 @@ export function Board(props) {
        <RenderSquare i="8" />
       </div>
       <div class="Restart"><Restart /></div>
+      <p1 class="lobby">Lobby: 
+        <ul class="list">
+          { playerBase.map((item, index) => <div>{playerBase[index]}</div> )}
+        </ul>
+      </p1>
      </div>    
      );
   

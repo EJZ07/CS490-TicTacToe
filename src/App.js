@@ -10,6 +10,7 @@ const socket = io();
 function App() {
     const [isLogin, setIsLogin] = useState(false);
     const inputRef = useRef(null);
+    
     function TicTacToe(){
        
         if(isLogin){

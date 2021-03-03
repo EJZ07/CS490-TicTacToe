@@ -7,3 +7,11 @@ class Person(db.Model):
 
     def __repr__(self):
         return '<Person %r>' % self.username
+
+class Username(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    
+    def __repr__(self):
+        return '<Username %r>' % self.username
