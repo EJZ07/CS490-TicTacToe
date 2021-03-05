@@ -4,4 +4,5 @@ Flask-SocketIO
 Flask-Cors
 Flask-SQLAlchemy
 react
+python-dotenv
 
