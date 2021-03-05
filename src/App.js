@@ -2,8 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import { Board } from './Board.js';
 import { useState, useRef, useEffect } from 'react';
-import io from 'socket.io-client';
-
+import { io } from 'socket.io-client';
 
 const socket = io();
 
@@ -33,14 +32,14 @@ function App() {
                         setIsLogin(!isLogin);
                     });
                    
-                }}>Board</button>
+                }}>Login</button>
             </div>
             );
     }
     
     function TheGame(){
         const message = inputRef.current.value; 
-        return <Board message={message}/>;
+        return <Board message={message} socket={socket}/>;
     }
             
     

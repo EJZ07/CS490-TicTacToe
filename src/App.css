@@ -3,6 +3,7 @@
 }
 
 .board {
+    font-size: 50px;
     display: grid; /* Enables CSS Grid */ 
     grid-template-rows: repeat(3, 0fr);
     grid-template-columns: repeat(3, 0fr);

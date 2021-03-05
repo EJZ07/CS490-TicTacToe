@@ -4,6 +4,11 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv, find_dotenv
+from flask_socketio import SocketIO
+from engineio.payload import Payload
+
+Payload.max_decode_packets = 5000
+
 
 load_dotenv(find_dotenv())
 
@@ -72,7 +77,7 @@ def on_name(data):
     if (playerType < 3):
         new_name = models.Username(username=data['message'], score=100)
         db.session.add(new_name)
-        #db.session.commit()
+        db.session.commit()
     
     print('User ' + str(data['message']) + ' has connected')
     socketio.emit(name_arr[-1], [playerType, data], broadcast=True, include_self=False)
@@ -85,26 +90,28 @@ def on_chat(data): # data is whatever arg you pass in your emit call on client
     print(str(data))
     # This emits the 'chat' event from the server to all clients except for
     # the client that emmitted the event that triggered this function
-    socketio.emit('tic',  data, broadcast=True, include_self=False)
+    socketio.emit('tic',  data, broadcast=True, include_self=True)
     
 @socketio.on('score')
 def on_score(data):
-    
-    if(data[1] == 'X'):
-        user = models.Username.query.order_by(models.Username.id.desc()).first()
-        user.score -= 1
+    if(data['message'] == 'X'):
+        winner = models.Username.query.filter_by(username=data['playerBase'][0]).first()
+        winner.score += 1
+        loser = models.Username.query.filter_by(username=data['playerBase'][1]).first()
+        loser.score -= 1
         db.session.commit()
-    elif(data[1] == 'O'):
-        user = models.Username.query.order_by(models.Username.id.desc()).offset(1).first()
-        user.score -= 1
+    else:
+        winner = models.Username.query.filter_by(username=data['playerBase'][1]).first()
+        winner.score += 1
+        loser = models.Username.query.filter_by(username=data['playerBase'][0]).first()
+        loser.score -= 1
         db.session.commit()
         
-    print("New score: " + str(user.score))
-    socketio.emit('score', user.score, broadcast=True, include_self=False)
+    print("New score: " + str(winner.score))
+    socketio.emit('score', [data['message'], winner.score, loser.score], broadcast=True, include_self=True)
     
 @socketio.on('reset')
 def on_reset(data):
-    name_arr = []
     socketio.emit('reset', data, broadcast=True, include_self=False)
 # Note that we don't call app.run anymore. We call socketio.run with app arg
 
