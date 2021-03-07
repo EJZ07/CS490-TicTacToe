@@ -5,15 +5,11 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv, find_dotenv
 from flask_socketio import SocketIO
-from engineio.payload import Payload
-
-Payload.max_decode_packets = 5000
-
-
-load_dotenv(find_dotenv())
 
 name_arr = []
 playerType = 0
+
+load_dotenv(find_dotenv())
 
 app = Flask(__name__, static_folder='./build/static')
 
@@ -48,9 +44,12 @@ def new_user():
 @app.route('/', defaults={"filename": "index.html"})
 @app.route('/<path:filename>')
 def index(filename):
+# Note that we don't call app.run anymore. We call socketio.run with app arg
     return send_from_directory('./build', filename)
 
-# When a client connects from this Socket connection, this function is run
+
+    
+    # When a client connects from this Socket connection, this function is run
 @socketio.on('connect')
 def on_connect():
     print('User connected!')
@@ -59,6 +58,18 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print('User disconnected!')
+
+@socketio.on('goodbye_all')
+def on_gbAll():
+    global name_arr 
+    name_arr = []
+    print('Everyone is gone')
+
+@socketio.on('goodbye')
+def on_gb(data):
+    global name_arr
+    name_arr.remove(data)
+    print(data + ' is gone')
     
 #When a Client enters a username and emits the event 'name', this function is run
 @socketio.on('name')
@@ -94,13 +105,15 @@ def on_chat(data): # data is whatever arg you pass in your emit call on client
     
 @socketio.on('score')
 def on_score(data):
+   
     if(data['message'] == 'X'):
+        print("Winner " + str(data['playerBase'][0]))
         winner = models.Username.query.filter_by(username=data['playerBase'][0]).first()
         winner.score += 1
         loser = models.Username.query.filter_by(username=data['playerBase'][1]).first()
         loser.score -= 1
         db.session.commit()
-    else:
+    elif(data['message'] == 'O'):
         winner = models.Username.query.filter_by(username=data['playerBase'][1]).first()
         winner.score += 1
         loser = models.Username.query.filter_by(username=data['playerBase'][0]).first()
@@ -112,8 +125,7 @@ def on_score(data):
     
 @socketio.on('reset')
 def on_reset(data):
-    socketio.emit('reset', data, broadcast=True, include_self=False)
-# Note that we don't call app.run anymore. We call socketio.run with app arg
+    socketio.emit('reset', data, broadcast=True, include_self=True)
 
 if __name__ == "__main__":
     socketio.run(

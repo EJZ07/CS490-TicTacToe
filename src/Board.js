@@ -2,19 +2,18 @@ import { useState, useEffect} from 'react';
 import { CalculateWinner, isBoardFull } from './Winner.js';
 import { io } from 'socket.io-client';
 
-
 const socket = io();
 var turn = 'X';
 var player = " ";
 var player_id;
 
-export function Board(prop) {
-  console.log("PASS");
+export function Board(prop) { 
   const [board, setBoard] = useState(Array(9).fill(null));
-  const [playerBase, setPlayerBase] = useState([]);
+  const [playerBase, setPlayerBase] = useState([]); 
   var winner;
   const [theScore, setTheScore] = useState({player1 : 100, player2 : 100});
-  const [isWin, setIsWin] = useState(false);
+  const [isShown, setIsShown] = useState(false);
+  const [winState, setWinState] = useState(false);
   
     
   function Square({value, onClick}) {
@@ -22,7 +21,6 @@ export function Board(prop) {
     return <div>
         <button class="box" onClick={onClick}>{value}</button>
       </div>;
-  
   }
   
   function Restart(){
@@ -35,6 +33,20 @@ export function Board(prop) {
       </div>;
   }
   
+  function Disconnect(){
+    return <div>
+    <p>
+      <button onClick={() => {
+        socket.emit('goodbye', prop.message);
+      }}>Leave Game</button>
+      
+      <button onClick={() => {
+        socket.emit('goodbye_all');
+      }}>Reset Every player</button>
+    </p>
+      </div>;
+      }
+  
     
   function RenderSquare(props) {
     return ( <div>
@@ -42,6 +54,8 @@ export function Board(prop) {
     <Square 
       value={board[props.i]} 
       onClick={() => {
+     
+      if(winState === false){
         if (player_id < 3 && board[props.i] === null){
           var index = props.i;
           const nextBoard = board.slice();
@@ -59,31 +73,29 @@ export function Board(prop) {
           winner = CalculateWinner(nextBoard);
           if (winner){
             socket.emit('score', {message : winner , playerBase});
+            
           }
           socket.emit('tic', { message: nextBoard, turn, index });
         }
-        
+      }
       }}/>
 
   </div>
-
     );
   }
   
   function getStatus() {
-   
+    winner = CalculateWinner(board);
     if (winner) {
       console.log('wINNER');
       
       if(winner === 'X'){
         console.log('wINNER IS x');
-        
-        winner = null;
         return "Winner: " + playerBase[0];
         
       }else if(winner === 'O'){
         console.log('wINNER IS O');
-        winner = null;
+    
         return "Winner: " + playerBase[1];
       }
   
@@ -101,8 +113,6 @@ export function Board(prop) {
   
   useEffect(() => {
     socket.on('name', (data) => {
-       console.log('message recieved');
-       console.log('Winner Stats: ' + winner);
       setPlayerBase(data[0]);
       
       console.log("Data " + data[1]);
@@ -118,21 +128,23 @@ export function Board(prop) {
           return Object.assign({}, prevScore, {player1: score});
       });
       
-      setTheScore(prevScore => {
+        setTheScore(prevScore => {
           const score = data[2];
           return Object.assign({}, prevScore, {player2: score});
-      });
+        });
       }else{
         setTheScore(prevScore => {
-          const score = data[1];
+          const score = data[2];
           return Object.assign({}, prevScore, {player2: score});
       });
       
-      setTheScore(prevScore => {
-          const score = data[2];
+        setTheScore(prevScore => {
+          const score = data[1];
           return Object.assign({}, prevScore, {player1: score});
-      });
+        });
       }
+      
+      setWinState(!winState); //WinState = True
 
     });
     
@@ -157,7 +169,6 @@ export function Board(prop) {
     // Listening for a chat event emitted by the server. If received, we
     // run the code in the function that is passed in as the second arg
     socket.on('tic', (data) => {
-      console.log('Player event received!');
       console.log(data);
       // If the server sends a message (on behalf of another client), then we
       // add it to the list of messages to render it on the UI.\\
@@ -181,16 +192,36 @@ export function Board(prop) {
     socket.on('reset', (data) => {
       setBoard(Array(9).fill(null));
       turn = 'X';
+      setWinState(false); //Change WinState to false
+      console.log("Thw winstate issssss: " + winState );
     });
+    
+    socket.on('disconnect', () =>{
+      setPlayerBase(Array().fill(null)); 
+  });
    
   }, []);
+  
+  function show(isHidden){
+    if(isShown){
+      return <div></div>;
+    }else{
+      return( <div>
+        <div>{playerBase[0]} / Score: {theScore['player1']}</div>
+        <div>{playerBase[1]} / Score: {theScore['player2']}</div>
+        </div>
+        );
+    }
+  }
   
   return ( <div>
   <h1>Hello {player} {prop.message}!</h1>
   <div className="leader">Leaderboard
+  <button class="show" onClick={() => {
+    setIsShown(!isShown);
+  }}>hide/show</button>
     <ul>
-      <div>{playerBase[0]} / Score: {theScore['player1']}</div>
-      <div>{playerBase[1]} / Score: {theScore['player2']}</div>
+      <div>{show(isShown)}</div>
     </ul>
   </div>
   <h2 className="game-info">{getStatus()}</h2>
@@ -206,6 +237,7 @@ export function Board(prop) {
        <RenderSquare i="8" />
       </div>
       <div class="Restart"><Restart /></div>
+      <div class="leave"><Disconnect /></div>
       <p1 class="lobby">Lobby: 
         <ul class="list">
           { playerBase.map((item, index) => <div>{playerBase[index]}</div> )}
