@@ -25,7 +25,7 @@ db = SQLAlchemy(app)
 import sqlalchemy
 from app import db
 import models
-db.create_all() 
+#db.create_all() 
 
 models.Username.query.all()
 
