@@ -1,8 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import App from "./App";
+import Board  from './Board'
 
-test("renders learn react link", () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test("Show and Hide Leaderboard", () => {
+  const result = render(<Board />);
+  
+  const showLeaderBoard = screen.getByText('leader');
+  expect(showLeaderBoard).toBeInTheDocument();
+  
+  fireEvent.click(showLeaderBoard)
+  expect(showLeaderBoard).not.toBeInTheDocument();
 });

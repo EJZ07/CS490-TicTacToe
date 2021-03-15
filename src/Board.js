@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { CalculateWinner, isBoardFull } from "./Winner.js";
-import { io } from "socket.io-client";
+import React, { useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
+import { CalculateWinner, isBoardFull } from './Winner';
 
 const socket = io();
-var turn = "X";
-var player = " ";
-var player_id;
+let turn = 'X';
+let player = ' ';
+let playerId;
 
 export function Board(prop) {
-  var winner;
+  let winner;
   const [board, setBoard] = useState(Array(9).fill(null));
   const [playerBase, setPlayerBase] = useState([]);
   const [theScore, setTheScore] = useState({ player1: 100, player2: 100 });
@@ -19,7 +19,7 @@ export function Board(prop) {
     //
     return (
       <div>
-        <button class="box" onClick={onClick}>
+        <button className="box" onClick={onClick}>
           {value}
         </button>
       </div>
@@ -32,8 +32,8 @@ export function Board(prop) {
         <button
           onClick={() => {
             setBoard(Array(9).fill(null));
-            turn = "X";
-            socket.emit("reset", { message: board, turn });
+            turn = 'X';
+            socket.emit('reset', { message: board, turn });
           }}
         >
           restart
@@ -48,7 +48,7 @@ export function Board(prop) {
         <p>
           <button
             onClick={() => {
-              socket.emit("goodbye", prop.message);
+              socket.emit('goodbye', prop.message);
             }}
           >
             Leave Game
@@ -56,7 +56,7 @@ export function Board(prop) {
 
           <button
             onClick={() => {
-              socket.emit("goodbye_all");
+              socket.emit('goodbye_all');
             }}
           >
             Reset Every player
@@ -73,24 +73,24 @@ export function Board(prop) {
           value={board[props.i]}
           onClick={() => {
             if (winState === false) {
-              if (player_id < 3 && board[props.i] === null) {
-                var index = props.i;
+              if (playerId < 3 && board[props.i] === null) {
+                const index = props.i;
                 const nextBoard = board.slice();
-                console.log("WHO???: " + index + " Player: " + player);
+                console.log(`WHO???: ${index} Player: ${player}`);
 
-                if (turn === "X") {
-                  nextBoard[index] = "X";
-                  turn = "O";
-                } else if (turn === "O") {
-                  nextBoard[index] = "O";
-                  turn = "X";
+                if (turn === 'X') {
+                  nextBoard[index] = 'X';
+                  turn = 'O';
+                } else if (turn === 'O') {
+                  nextBoard[index] = 'O';
+                  turn = 'X';
                 }
                 setBoard(nextBoard);
                 winner = CalculateWinner(nextBoard);
                 if (winner) {
-                  socket.emit("score", { message: winner, playerBase });
+                  socket.emit('score', { message: winner, playerBase });
                 }
-                socket.emit("tic", { message: nextBoard, turn, index });
+                socket.emit('tic', { message: nextBoard, turn, index });
               }
             }
           }}
@@ -102,83 +102,82 @@ export function Board(prop) {
   function getStatus() {
     winner = CalculateWinner(board);
     if (winner) {
-      console.log("wINNER");
+      console.log('wINNER');
 
-      if (winner === "X") {
-        console.log("wINNER IS x");
-        return "Winner: " + playerBase[0];
-      } else if (winner === "O") {
-        console.log("wINNER IS O");
+      if (winner === 'X') {
+        console.log('wINNER IS x');
+        return `Winner: ${playerBase[0]}`;
+      } if (winner === 'O') {
+        console.log('wINNER IS O');
 
-        return "Winner: " + playerBase[1];
+        return `Winner: ${playerBase[1]}`;
       }
     } else if (isBoardFull(board)) {
-      return "Draw!";
+      return 'Draw!';
     } else {
-      if (turn === "X") {
+      if (turn === 'X') {
         return "Player 1's turn";
-      } else {
-        return "Player 2's turn";
       }
+      return "Player 2's turn";
     }
   }
 
   useEffect(() => {
-    socket.on("name", (data) => {
+    socket.on('name', (data) => {
       setPlayerBase(data[0]);
 
-      console.log("Data " + data[1]);
-      console.log("PlayerBase = " + playerBase + " Score: " + theScore);
+      console.log(`Data ${data[1]}`);
+      console.log(`PlayerBase = ${playerBase} Score: ${theScore}`);
     });
 
-    socket.on("score", (data) => {
-      console.log("Score updated");
+    socket.on('score', (data) => {
+      console.log('Score updated');
 
-      if (data["winner"] === "X") {
+      if (data.winner === 'X') {
         setTheScore((prevScore) => {
           const score = data[1];
-          return Object.assign({}, prevScore, { player1: score });
+          return { ...prevScore, player1: score };
         });
 
         setTheScore((prevScore) => {
           const score = data[2];
-          return Object.assign({}, prevScore, { player2: score });
+          return { ...prevScore, player2: score };
         });
       } else {
         setTheScore((prevScore) => {
           const score = data[2];
-          return Object.assign({}, prevScore, { player2: score });
+          return { ...prevScore, player2: score };
         });
 
         setTheScore((prevScore) => {
           const score = data[1];
-          return Object.assign({}, prevScore, { player1: score });
+          return { ...prevScore, player1: score };
         });
       }
 
-      setWinState(!winState); //WinState = True
+      setWinState(!winState); // WinState = True
     });
 
     socket.on(prop.message, ([playerType, data]) => {
       console.log(prop.message);
-      console.log("Player " + playerType + " is here");
+      console.log(`Player ${playerType} is here`);
       console.log(data, playerType);
 
       if (playerType === 1) {
-        player_id = 1;
-        player = "Player 1";
+        playerId = 1;
+        player = 'Player 1';
       } else if (playerType === 2) {
-        player_id = 2;
-        player = "Player 2";
+        playerId = 2;
+        player = 'Player 2';
       } else {
-        player_id = 3;
-        player = "Spectator";
+        playerId = 3;
+        player = 'Spectator';
       }
     });
 
     // Listening for a chat event emitted by the server. If received, we
     // run the code in the function that is passed in as the second arg
-    socket.on("tic", (data) => {
+    socket.on('tic', (data) => {
       console.log(data);
       // If the server sends a message (on behalf of another client), then we
       // add it to the list of messages to render it on the UI.\\
@@ -186,60 +185,64 @@ export function Board(prop) {
       setBoard((prevBoard) => {
         const nextBoard = prevBoard.slice();
 
-        if (data.turn === "O") {
-          nextBoard[data.index] = "X";
-          turn = "O";
+        if (data.turn === 'O') {
+          nextBoard[data.index] = 'X';
+          turn = 'O';
         } else {
-          nextBoard[data.index] = "O";
-          turn = "X";
+          nextBoard[data.index] = 'O';
+          turn = 'X';
         }
 
         return nextBoard;
       });
     });
 
-    socket.on("reset", (data) => {
+    socket.on('reset', (data) => {
       setBoard(Array(9).fill(null));
-      turn = "X";
-      setWinState(false); //Change WinState to false
-      console.log("Thw winstate issssss: " + winState);
+      turn = 'X';
+      setWinState(false); // Change WinState to false
+      console.log(`Thw winstate issssss: ${winState}`);
     });
 
-    socket.on("disconnect", () => {
-      setPlayerBase(Array().fill(null));
+    socket.on('disconnect', () => {
+      setPlayerBase([]);
     });
-  }, []);
+  }, [playerBase, prop.message, theScore, winState]);
 
   function show(isHidden) {
     if (isShown) {
-      return <div></div>;
-    } else {
-      return (
-        <table class="table">
-          <tr>
-            <th>Players</th>
-            <th>Score</th>
-          </tr>
-          <tr>
-            <th>{playerBase[0]}</th>
-            <th>{theScore["player1"]}</th>
-          </tr>
-          <tr>
-            <th>{playerBase[1]}</th>
-            <th>{theScore["player2"]}</th>
-          </tr>
-        </table>
-      );
+      return <div />;
     }
+    return (
+      <table className="table">
+        <tr>
+          <th>Players</th>
+          <th>Score</th>
+        </tr>
+        <tr>
+          <th>{playerBase[0]}</th>
+          <th>{theScore.player1}</th>
+        </tr>
+        <tr>
+          <th>{playerBase[1]}</th>
+          <th>{theScore.player2}</th>
+        </tr>
+      </table>
+    );
   }
 
   return (
     <div>
       <h1>
-        Hello {player} {prop.message}!
+        Hello
+        {' '}
+        {player}
+        {' '}
+        {prop.message}
+        !
       </h1>
       <button
-        class="show"
+        className="show"
         onClick={() => {
           setIsShown(!isShown);
         }}
@@ -264,15 +267,15 @@ export function Board(prop) {
         <RenderSquare i="7" />
         <RenderSquare i="8" />
       </div>
-      <div class="Restart">
+      <div className="Restart">
         <Restart />
       </div>
-      <div class="leave">
+      <div className="leave">
         <Disconnect />
       </div>
-      <p1 class="lobby">
+      <p1 className="lobby">
         Lobby:
-        <ul class="list">
+        <ul className="list">
           {playerBase.map((item, index) => (
             <div>{playerBase[index]}</div>
           ))}
